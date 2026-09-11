@@ -46,6 +46,35 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+@app.middleware("http")
+async def ensure_api_path(request, call_next):
+    path = request.scope.get("path", "")
+    if "index.py" in path:
+        path = path.replace("/api/index.py", "").replace("/index.py", "")
+        if not path.startswith("/"):
+            path = "/" + path
+        request.scope["path"] = path
+
+    api_prefixes = (
+        "/auth",
+        "/patients",
+        "/routine",
+        "/medications",
+        "/family",
+        "/health",
+        "/settings",
+        "/alerts",
+        "/reports",
+        "/voice",
+    )
+    if any(path == prefix or path.startswith(prefix + "/") for prefix in api_prefixes):
+        request.scope["path"] = "/api" + path
+
+    return await call_next(request)
+
+
 app.include_router(router)
 
 
