@@ -1,6 +1,7 @@
 import os, asyncio, contextlib, logging
 from pathlib import Path
 from contextlib import asynccontextmanager
+from urllib.parse import parse_qs, urlencode
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
@@ -62,12 +63,39 @@ app.add_middleware(
 @app.middleware("http")
 async def ensure_api_path(request, call_next):
     path = request.scope.get("path", "")
-    if "index.py" in path:
-        path = path.replace("/api/index.py", "").replace("/index.py", "")
-        if not path.startswith("/"):
-            path = "/" + path
-        request.scope["path"] = path
 
+    # Check if request was rewritten to serverless function file or root API
+    if "index.py" in path or "[...path]" in path or path in ("/api", "/api/"):
+        # Check standard headers where original URL is preserved by reverse proxies
+        orig_uri = (
+            request.headers.get("x-forwarded-uri")
+            or request.headers.get("x-rewrite-url")
+            or request.headers.get("x-original-url")
+            or ""
+        )
+        if orig_uri and not any(f in orig_uri for f in ("index.py", "[...path]")):
+            path = orig_uri.split("?")[0]
+        else:
+            # Check query params for captured subpath
+            captured = (
+                request.query_params.get("match")
+                or request.query_params.get("0")
+                or request.query_params.get("path")
+                or ""
+            )
+            if captured:
+                clean_captured = captured.strip().lstrip("/")
+                path = f"/api/{clean_captured}"
+            else:
+                path = path.replace("/api/index.py", "/api").replace("/index.py", "")
+
+    # Clean leading and trailing artifacts
+    if not path.startswith("/"):
+        path = "/" + path
+    if path.endswith("/index.py"):
+        path = path[:-9] or "/"
+
+    # Prefix routes if called without /api
     api_prefixes = (
         "/auth",
         "/patients",
@@ -81,9 +109,28 @@ async def ensure_api_path(request, call_next):
         "/voice",
     )
     if any(path == prefix or path.startswith(prefix + "/") for prefix in api_prefixes):
-        request.scope["path"] = "/api" + path
+        path = "/api" + path
+
+    request.scope["path"] = path
+
+    # Clean internal routing query parameters from query_string so routes receive clean params
+    qs = request.scope.get("query_string", b"")
+    if qs and any(k in qs for k in (b"match=", b"0=", b"path=")):
+        try:
+            params = parse_qs(qs.decode("latin1"), keep_blank_values=True)
+            for k in ("match", "0", "1", "path"):
+                params.pop(k, None)
+            pairs = [(k, v) for k, vals in params.items() for v in vals]
+            request.scope["query_string"] = urlencode(pairs).encode("latin1")
+        except Exception:
+            pass
 
     return await call_next(request)
+
+
+@app.get("/health")
+def root_health():
+    return {"status": "ok", "app": "RecallX"}
 
 
 app.include_router(router)

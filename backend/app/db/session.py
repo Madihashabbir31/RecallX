@@ -18,15 +18,17 @@ if DATABASE_URL.startswith("sqlite"):
 
     @event.listens_for(engine, "connect")
     def pragmas(conn, _):
-        conn.execute("PRAGMA foreign_keys=ON")
-        if not os.getenv("VERCEL") and not os.getenv("AWS_LAMBDA_FUNCTION_NAME"):
+        try:
+            cursor = conn.cursor()
+            cursor.execute("PRAGMA foreign_keys=ON")
+            if not os.getenv("VERCEL") and not os.getenv("AWS_LAMBDA_FUNCTION_NAME"):
+                cursor.execute("PRAGMA journal_mode=WAL")
+            else:
+                cursor.execute("PRAGMA journal_mode=DELETE")
+            cursor.close()
+        except Exception:
             try:
-                conn.execute("PRAGMA journal_mode=WAL")
-            except Exception:
-                pass
-        else:
-            try:
-                conn.execute("PRAGMA journal_mode=DELETE")
+                conn.execute("PRAGMA foreign_keys=ON")
             except Exception:
                 pass
 

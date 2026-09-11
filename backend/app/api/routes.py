@@ -45,6 +45,12 @@ def identity(db, user):
     }
 
 
+@router.get("")
+@router.get("/")
+def api_root():
+    return {"status": "ok", "app": "RecallX API", "version": "1.0.0"}
+
+
 @router.get("/health")
 def health():
     return {"status": "ok"}
