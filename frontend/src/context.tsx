@@ -11,6 +11,7 @@ import { action, syncQueue, pendingCount } from "./services/api";
 import { patientService } from "./services/patientService";
 import { settingsService } from "./services/settingsService";
 import { storageService } from "./services/storageService";
+import { authService } from "./services/authService";
 import { read, write, clearPrivate } from "./services/offline";
 import i18n, { applyLanguageDirection } from "./locales";
 
@@ -18,9 +19,8 @@ export type User = {
   id: number;
   name: string;
   role: "patient" | "caregiver";
-  email: string;
   patients: { id: number; name: string }[];
-  demo_mode: boolean;
+  demo_mode?: boolean;
 };
 
 export type Settings = {
@@ -35,9 +35,11 @@ const Context = createContext<any>(null);
 
 export function Provider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(() =>
-    storageService.getCurrentUser(),
+    authService.getCurrentUser(),
   );
-  const [pid, setPid] = useState<number | null>(user?.patients[0]?.id || 1);
+  const [pid, setPid] = useState<number | null>(() =>
+    authService.getCurrentUser()?.patients?.[0]?.id || 1,
+  );
   const [data, setData] = useState<any>(null);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -175,7 +177,7 @@ export function Provider({ children }: { children: ReactNode }) {
 
   async function logout() {
     await clearPrivate();
-    storageService.clearSession();
+    await authService.logout();
     setUser(null);
     setData(null);
     setPid(null);

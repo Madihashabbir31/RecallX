@@ -98,13 +98,24 @@ export const storageService = {
 
   // Helpers for user session
   getCurrentUser() {
-    return this.getItem<any>(STORAGE_KEYS.USER, defaultUsers.patient);
+    const session = this.getItem<any>(STORAGE_KEYS.SESSION, null);
+    if (!session || !session.isAuthenticated) {
+      return null;
+    }
+    const user = this.getItem<any>(STORAGE_KEYS.USER, null);
+    if (user) return user;
+    return session.role === "caregiver" ? defaultUsers.caregiver : defaultUsers.patient;
   },
 
   setCurrentUser(user: any) {
     this.setItem(STORAGE_KEYS.USER, user);
     this.setItem(STORAGE_KEYS.LEGACY_USER, user);
     this.setItem(STORAGE_KEYS.TOKEN, "demo-frontend-token");
+    this.setItem(STORAGE_KEYS.SESSION, {
+      isAuthenticated: true,
+      role: user.role,
+      userId: user.id,
+    });
   },
 
   clearSession() {

@@ -24,6 +24,7 @@ import {
   RefreshCw,
 } from "lucide-react";
 import { useApp } from "./context";
+import { authService } from "./services/authService";
 import {
   Brand,
   LoadingState,
@@ -81,7 +82,7 @@ function Layout({ role }: { role: "patient" | "caregiver" }) {
     setToast,
   } = useApp();
 
-  if (!user) return <Navigate to="/login" replace />;
+  if (!user || !authService.isAuthenticated()) return <Navigate to="/" replace />;
   if (user.role !== role) return <Navigate to={"/" + user.role} replace />;
 
   const caregiver = role === "caregiver";
@@ -237,14 +238,8 @@ export default function App() {
         {t("skipToContent")}
       </a>
       <Routes>
-        <Route
-          path="/"
-          element={<Navigate to={user ? "/" + user.role : "/login"} replace />}
-        />
-        <Route
-          path="/login"
-          element={user ? <Navigate to={"/" + user.role} replace /> : <Auth />}
-        />
+        <Route path="/" element={<Auth />} />
+        <Route path="/login" element={<Auth />} />
         <Route path="/games" element={<Navigate to="/patient/games" replace />} />
         <Route path="/games/:type" element={<GameRedirect />} />
         <Route path="/patient" element={<Layout role="patient" />}>

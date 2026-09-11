@@ -41,7 +41,7 @@ export function ProfileMenu() {
   const handleLogout = async () => {
     setOpen(false);
     await logout();
-    navigate("/login", { replace: true });
+    navigate("/", { replace: true });
   };
 
   return (

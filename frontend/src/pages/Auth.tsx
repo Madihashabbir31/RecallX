@@ -15,7 +15,7 @@ import {
 } from "lucide-react";
 import { Brand, PrimaryButton, SecondaryButton } from "../components/ui";
 import { LanguageSelector } from "../components/LanguageSelector";
-import { authService } from "../services/api";
+import { authService } from "../services/authService";
 import { useApp } from "../context";
 import { applyLanguageDirection } from "../locales";
 
@@ -156,15 +156,30 @@ export default function Auth() {
 
           {showForm && (
             <form onSubmit={handleSubmit((v) => enter(undefined, v))} className="auth-form">
+              <div
+                style={{
+                  fontSize: "0.82rem",
+                  color: "var(--muted, #64748b)",
+                  marginBottom: "12px",
+                  background: "rgba(0,0,0,0.03)",
+                  border: "1px solid var(--border, #e2e8f0)",
+                  padding: "8px 12px",
+                  borderRadius: "8px",
+                  lineHeight: 1.4,
+                }}
+              >
+                <div><strong>Patient:</strong> patient@recallx.demo / patient123</div>
+                <div><strong>Caregiver:</strong> caregiver@recallx.demo / caregiver123</div>
+              </div>
               <label>
                 <div className="form-label-with-icon">
                   <Mail size={15} />
                   <span>{t("email")}</span>
                 </div>
                 <input
-                  type="email"
+                  type="text"
                   autoComplete="username"
-                  placeholder="name@example.com"
+                  placeholder="patient@recallx.demo"
                   {...register("email", { required: true })}
                 />
               </label>

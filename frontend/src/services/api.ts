@@ -4,6 +4,7 @@ import { patientService } from "./patientService";
 import { settingsService } from "./settingsService";
 import { authService } from "./authService";
 
+export { authService };
 export const API_BASE = "/api";
 
 export async function request(
@@ -196,5 +197,3 @@ export async function action(userId: number, path: string, body: any) {
     throw e;
   }
 }
-
-export { authService };
