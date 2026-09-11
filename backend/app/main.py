@@ -21,12 +21,23 @@ async def reminder_loop():
         await asyncio.sleep(2)
 
 
+def init_database():
+    try:
+        Base.metadata.create_all(engine)
+        with SessionLocal() as db:
+            if DEMO_MODE:
+                seed(db)
+    except Exception as err:
+        logging.exception("Database initialization error: %s", err)
+
+
+# Initialize immediately on module load so tables exist even if serverless skips ASGI lifespan
+init_database()
+
+
 @asynccontextmanager
 async def lifespan(app):
-    Base.metadata.create_all(engine)
-    with SessionLocal() as db:
-        if DEMO_MODE:
-            seed(db)
+    init_database()
     is_serverless = bool(os.getenv("VERCEL") or os.getenv("AWS_LAMBDA_FUNCTION_NAME"))
     task = None
     if not is_serverless:

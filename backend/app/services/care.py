@@ -4,7 +4,10 @@ from sqlalchemy import select
 from app.core.config import TIMEZONE, DEMO_GRACE_SECONDS
 from app.models.entities import *
 
-ZONE = ZoneInfo(TIMEZONE)
+try:
+    ZONE = ZoneInfo(TIMEZONE)
+except Exception:
+    ZONE = timezone(timedelta(hours=5, minutes=30))
 
 
 def today():

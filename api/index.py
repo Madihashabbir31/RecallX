@@ -5,16 +5,34 @@ from pathlib import Path
 # Mark as Vercel serverless environment
 os.environ["VERCEL"] = "1"
 
-# Add repository root and backend directory to sys.path
-root_dir = Path(__file__).resolve().parent.parent
+# Resolve directories
+current_dir = Path(__file__).resolve().parent
+root_dir = current_dir.parent
 backend_dir = root_dir / "backend"
 
-for path in [str(root_dir), str(backend_dir)]:
-    if path not in sys.path:
-        sys.path.insert(0, path)
+candidates = [
+    str(backend_dir),
+    str(root_dir),
+    str(current_dir),
+    os.getcwd(),
+    os.path.join(os.getcwd(), "backend"),
+    "/var/task",
+    "/var/task/backend",
+]
 
-from app.main import app
+for p in candidates:
+    if p and os.path.exists(p) and p not in sys.path:
+        sys.path.insert(0, p)
 
-# Export both app and handler for Vercel serverless runtime
+try:
+    from app.main import app
+except ImportError:
+    try:
+        from backend.app.main import app
+    except ImportError:
+        sys.path.insert(0, str(backend_dir / "app"))
+        from main import app
+
+# Export for Vercel Serverless Function runtime
 handler = app
 __all__ = ["app", "handler"]
