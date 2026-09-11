@@ -131,7 +131,7 @@ export function Dashboard() {
           />
           <div className="chart">
             <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={data.progress.weekly}>
+              <LineChart data={data?.progress?.weekly || []}>
                 <CartesianGrid vertical={false} stroke="#e5eae7" strokeDasharray="3 3" />
                 <XAxis dataKey="day" tickLine={false} />
                 <YAxis domain={[0, 100]} tickLine={false} />
@@ -703,14 +703,14 @@ export function Reports() {
         "Routine adherence (%)",
         "Medication adherence (%)",
       ],
-      ...data.progress.weekly.map((d: any) => [
-        d.date,
-        d.accuracy ?? "",
-        d.sessions,
+      ...((data?.progress?.weekly || []).map((d: any) => [
+        d.date || "",
+        d.accuracy ?? d.score ?? "",
+        d.sessions ?? 1,
         d.response_time ?? "",
-        d.routine,
-        d.medication,
-      ]),
+        d.routine ?? d.routine_done ?? 0,
+        d.medication ?? d.meds_taken ?? 0,
+      ])),
     ];
     const blob = new Blob([rows.map((r) => r.join(",")).join("\r\n")], {
       type: "text/csv;charset=utf-8;",

@@ -130,6 +130,24 @@ export const gameService = {
       recentScores.reduce((a, b) => a + b, 0) / recentScores.length,
     );
     overallProgress.memory_score = avgScore;
+    overallProgress.total_sessions = (overallProgress.total_sessions || sessions.length - 1) + 1;
+
+    // Prepend to recent list
+    const recent = Array.isArray(overallProgress.recent)
+      ? overallProgress.recent
+      : (defaultProgress.recent || []);
+    overallProgress.recent = [
+      {
+        id: sessionWithMeta.id,
+        game_type: sessionWithMeta.game_type,
+        difficulty: sessionWithMeta.difficulty,
+        accuracy: Math.round(sessionWithMeta.accuracy),
+        response_time: Math.round((sessionWithMeta.response_time || 3.0) * 10) / 10,
+        completed_at: sessionWithMeta.completed_at,
+      },
+      ...recent.filter((s: any) => s.id !== sessionWithMeta.id),
+    ].slice(0, 20);
+
     storageService.setItem(STORAGE_KEYS.PROGRESS, overallProgress);
 
     return sessionWithMeta;

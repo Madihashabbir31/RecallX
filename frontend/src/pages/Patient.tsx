@@ -478,6 +478,20 @@ export function Progress({ caregiver = false }: { caregiver?: boolean }) {
   const { t } = useTranslation();
   const { data } = useApp();
   const p = data?.progress || defaultProgress;
+  const streak = p.streak ?? defaultProgress.streak ?? 5;
+  const totalSessions = p.total_sessions ?? (p.recent?.length || defaultProgress.total_sessions || 14);
+  const memoryScore = p.memory_score ?? defaultProgress.memory_score ?? 82;
+  const weekly = (Array.isArray(p.weekly) && p.weekly.length ? p.weekly : defaultProgress.weekly).map((d: any) => ({
+    ...d,
+    accuracy: typeof d.accuracy === "number" ? d.accuracy : (typeof d.score === "number" ? d.score : 80),
+    routine: typeof d.routine === "number" ? d.routine : (typeof d.routine_done === "number" ? d.routine_done : 5),
+    medication: typeof d.medication === "number" ? d.medication : (typeof d.meds_taken === "number" ? d.meds_taken : 2),
+    response_time: typeof d.response_time === "number" ? d.response_time : 3.5,
+    difficulty: typeof d.difficulty === "number" ? d.difficulty : 1,
+  }));
+  const recent = Array.isArray(p.recent) && p.recent.length ? p.recent : (defaultProgress.recent || []);
+  const familyStats = Array.isArray(p.family) && p.family.length ? p.family : (defaultProgress.family || []);
+
   return (
     <>
       <PageHeader
@@ -488,18 +502,18 @@ export function Progress({ caregiver = false }: { caregiver?: boolean }) {
         <StatCard
           icon={Brain}
           label={t("score")}
-          value={p.memory_score + "%"}
+          value={memoryScore + "%"}
         />
         <StatCard
           icon={Flame}
           label={t("streak")}
-          value={p.streak}
+          value={streak}
           tone="amber"
         />
         <StatCard
           icon={Activity}
           label={t("recent")}
-          value={p.total_sessions}
+          value={totalSessions}
           tone="blue"
         />
       </div>
@@ -508,7 +522,7 @@ export function Progress({ caregiver = false }: { caregiver?: boolean }) {
           <h2>{t("weekly")}</h2>
           <div className="chart">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={p.weekly}>
+              <BarChart data={weekly}>
                 <CartesianGrid vertical={false} stroke="#e6ebe8" />
                 <XAxis dataKey="day" />
                 <YAxis domain={[0, 100]} />
@@ -527,7 +541,7 @@ export function Progress({ caregiver = false }: { caregiver?: boolean }) {
           <h2>{t("routineDone")}</h2>
           <div className="chart">
             <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={p.weekly}>
+              <LineChart data={weekly}>
                 <CartesianGrid vertical={false} stroke="#e6ebe8" />
                 <XAxis dataKey="day" />
                 <YAxis domain={[0, 100]} />
@@ -554,8 +568,8 @@ export function Progress({ caregiver = false }: { caregiver?: boolean }) {
           <RecallCard>
             <h2>Response time · seconds</h2>
             <div className="chart">
-              <ResponsiveContainer>
-                <LineChart data={p.weekly}>
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={weekly}>
                   <XAxis dataKey="day" />
                   <YAxis />
                   <Tooltip />
@@ -572,8 +586,8 @@ export function Progress({ caregiver = false }: { caregiver?: boolean }) {
             <h2>Difficulty progression</h2>
             <p className="muted">1 Easy · 2 Medium · 3 Hard</p>
             <div className="chart">
-              <ResponsiveContainer>
-                <LineChart data={p.weekly}>
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={weekly}>
                   <XAxis dataKey="day" />
                   <YAxis domain={[1, 3]} ticks={[1, 2, 3]} />
                   <Tooltip />
@@ -602,36 +616,36 @@ export function Progress({ caregiver = false }: { caregiver?: boolean }) {
               </tr>
             </thead>
             <tbody>
-              {p.recent.map((s: any) => (
-                <tr key={s.id}>
+              {recent.map((s: any) => (
+                <tr key={s.id || s.completed_at}>
                   <td>
                     {t(
                       gameMeta.find((g) => g.id === s.game_type)?.key ||
                         "games",
                     )}
-                    <small>{t(s.difficulty)}</small>
+                    <small>{t(s.difficulty || "easy")}</small>
                   </td>
-                  <td>{Math.round(s.accuracy)}%</td>
-                  <td>{Math.round(s.response_time)} s</td>
-                  <td>{new Date(s.completed_at).toLocaleDateString()}</td>
+                  <td>{Math.round(s.accuracy || 0)}%</td>
+                  <td>{typeof s.response_time === "number" ? Math.round(s.response_time * 10) / 10 : 3} s</td>
+                  <td>{s.completed_at ? new Date(s.completed_at).toLocaleDateString() : t("today")}</td>
                 </tr>
               ))}
             </tbody>
           </table>
-          {!p.recent.length && <EmptyState />}
+          {!recent.length && <EmptyState text={t("empty")} />}
         </div>
       </RecallCard>
       {caregiver && (
         <>
           <SectionHeader title="Family recall performance" />
           <div className="stats-grid">
-            {p.family.map((f: any) => (
+            {familyStats.map((f: any) => (
               <RecallCard key={f.id}>
                 <h3>{f.name}</h3>
                 <strong>
                   {f.accuracy === null ? "No attempts yet" : f.accuracy + "%"}
                 </strong>
-                <p>{f.attempts} attempts</p>
+                <p>{f.attempts || 0} attempts</p>
               </RecallCard>
             ))}
           </div>

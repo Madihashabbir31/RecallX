@@ -71,10 +71,68 @@ export const patientService = {
       STORAGE_KEYS.FAMILY,
       defaultFamily,
     );
-    const progress = storageService.getItem(
+    const rawProgress = storageService.getItem<any>(
       STORAGE_KEYS.PROGRESS,
       defaultProgress,
     );
+    const games = storageService.getItem<any[]>(STORAGE_KEYS.GAMES, []);
+
+    // Merge stored game sessions into progress.recent
+    const recentSessions = games.length
+      ? games.slice().reverse().slice(0, 15).map((g) => ({
+          id: g.id || Date.now(),
+          game_type: g.game_type || "memory",
+          difficulty: g.difficulty || "easy",
+          accuracy: Math.round(g.accuracy || 80),
+          response_time: typeof g.response_time === "number" ? Math.round(g.response_time * 10) / 10 : 3.0,
+          completed_at: g.completed_at || new Date().toISOString(),
+        }))
+      : (Array.isArray(rawProgress?.recent) && rawProgress.recent.length)
+        ? rawProgress.recent
+        : defaultProgress.recent;
+
+    // Ensure weekly array has all required properties for both patient & caregiver charts
+    const weeklyData = (rawProgress?.weekly || defaultProgress.weekly).map((w: any) => ({
+      day: w.day || "Mon",
+      date: w.date || today,
+      accuracy: typeof w.accuracy === "number" ? w.accuracy : (typeof w.score === "number" ? w.score : 80),
+      score: typeof w.score === "number" ? w.score : (typeof w.accuracy === "number" ? w.accuracy : 80),
+      routine: typeof w.routine === "number" ? w.routine : (typeof w.routine_done === "number" ? w.routine_done : 5),
+      routine_done: typeof w.routine_done === "number" ? w.routine_done : (typeof w.routine === "number" ? w.routine : 5),
+      medication: typeof w.medication === "number" ? w.medication : (typeof w.meds_taken === "number" ? w.meds_taken : 2),
+      meds_taken: typeof w.meds_taken === "number" ? w.meds_taken : (typeof w.medication === "number" ? w.medication : 2),
+      sessions: w.sessions || 2,
+      response_time: typeof w.response_time === "number" ? w.response_time : 3.5,
+      difficulty: w.difficulty || 1,
+    }));
+
+    // Ensure family recall stats exist
+    const familyStats = (Array.isArray(rawProgress?.family) && rawProgress.family.length)
+      ? rawProgress.family
+      : (family.length
+          ? family.map((f: any, idx: number) => ({
+              id: f.id,
+              name: f.name,
+              relation: f.relation,
+              accuracy: [95, 92, 88, 100][idx % 4],
+              attempts: [18, 14, 10, 22][idx % 4],
+            }))
+          : defaultProgress.family);
+
+    const progress = {
+      ...defaultProgress,
+      ...rawProgress,
+      streak: rawProgress?.streak || defaultProgress.streak,
+      total_sessions: Math.max(games.length, rawProgress?.total_sessions || defaultProgress.total_sessions),
+      recent: recentSessions,
+      weekly: weeklyData,
+      family: familyStats,
+      recommendations: {
+        ...defaultProgress.recommendations,
+        ...(rawProgress?.recommendations || {}),
+      },
+    };
+
     const alerts = storageService.getItem(
       STORAGE_KEYS.ALERTS,
       defaultAlerts,
@@ -298,22 +356,55 @@ export const patientService = {
 
   async saveGameSession(session: any) {
     const games = storageService.getItem<any[]>(STORAGE_KEYS.GAMES, []);
-    games.push({
+    const newSession = {
       ...session,
-      id: Date.now(),
-      completed_at: new Date().toISOString(),
-    });
+      id: session.id || Date.now(),
+      completed_at: session.completed_at || new Date().toISOString(),
+    };
+    games.push(newSession);
     storageService.setItem(STORAGE_KEYS.GAMES, games);
 
-    // Update progress score
+    // Update progress
     const progress = storageService.getItem<any>(STORAGE_KEYS.PROGRESS, defaultProgress);
     const recentScores = games.slice(-5).map((g) => g.accuracy || g.score || 80);
     const avgScore = Math.round(
       recentScores.reduce((a, b) => a + b, 0) / recentScores.length,
     );
     progress.memory_score = avgScore;
+    progress.total_sessions = (progress.total_sessions || games.length - 1) + 1;
+
+    // Prepend to recent list
+    const recent = Array.isArray(progress.recent) ? progress.recent : (defaultProgress.recent || []);
+    progress.recent = [
+      {
+        id: newSession.id,
+        game_type: newSession.game_type,
+        difficulty: newSession.difficulty,
+        accuracy: Math.round(newSession.accuracy),
+        response_time: Math.round((newSession.response_time || 3.0) * 10) / 10,
+        completed_at: newSession.completed_at,
+      },
+      ...recent.filter((s: any) => s.id !== newSession.id),
+    ].slice(0, 20);
+
+    // Update family recall if this was a family game
+    if (newSession.game_type === "family" && newSession.attempts?.length) {
+      const familyList = Array.isArray(progress.family) && progress.family.length
+        ? progress.family
+        : defaultProgress.family;
+      newSession.attempts.forEach((att: any) => {
+        const found = familyList.find((f: any) => f.id === att.target);
+        if (found) {
+          found.attempts = (found.attempts || 0) + 1;
+          const currAcc = found.accuracy ?? 80;
+          found.accuracy = Math.round((currAcc + (att.correct ? 100 : 0)) / 2);
+        }
+      });
+      progress.family = familyList;
+    }
+
     storageService.setItem(STORAGE_KEYS.PROGRESS, progress);
-    return session;
+    return newSession;
   },
 
   async markAlertRead(alertId: number) {
