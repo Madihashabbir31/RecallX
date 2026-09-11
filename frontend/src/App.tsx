@@ -5,6 +5,7 @@ import {
   Outlet,
   NavLink,
   Link,
+  useParams,
 } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import {
@@ -220,6 +221,11 @@ function Layout({ role }: { role: "patient" | "caregiver" }) {
   );
 }
 
+function GameRedirect() {
+  const { type } = useParams();
+  return <Navigate to={`/patient/games/${type || ""}`} replace />;
+}
+
 export default function App() {
   const { user } = useApp();
   const { t } = useTranslation();
@@ -239,6 +245,8 @@ export default function App() {
           path="/login"
           element={user ? <Navigate to={"/" + user.role} replace /> : <Auth />}
         />
+        <Route path="/games" element={<Navigate to="/patient/games" replace />} />
+        <Route path="/games/:type" element={<GameRedirect />} />
         <Route path="/patient" element={<Layout role="patient" />}>
           <Route index element={<Home />} />
           <Route path="games" element={<GamesHub />} />

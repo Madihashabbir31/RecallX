@@ -49,6 +49,7 @@ import {
 } from "../components/ui";
 import { patientService } from "../services/patientService";
 import { storageService } from "../services/storageService";
+import { gameService } from "../services/gameService";
 import { write } from "../services/offline";
 import { speak, listen } from "../services/voice";
 import { FamilyMemberCard } from "../components/FamilyMemberCard";
@@ -335,33 +336,47 @@ export function Home() {
 export function GamesHub() {
   const { t } = useTranslation();
   const { data } = useApp();
+  const progress = data?.progress || defaultProgress;
+  const gameProgress = gameService.getGameProgress();
+
   return (
     <>
       <PageHeader title={t("games")} subtitle={t("gamesSubtitle")} />
       <div className="game-hub">
-        {gameMeta.map((g) => (
-          <Link
-            className={"game-card " + g.tone}
-            key={g.id}
-            to={"/patient/games/" + g.id}
-          >
-            <span className="game-icon">
-              <g.icon size={47} strokeWidth={1.5} />
-            </span>
-            <div>
-              <span className="badge">
-                {t(data.progress.recommendations[g.id].next_level)} · 3–5{" "}
-                {t("minutes")}
+        {gameMeta.map((g) => {
+          const nextLevel =
+            progress?.recommendations?.[g.id]?.next_level || "easy";
+          const highScore = gameProgress?.highScores?.[g.id];
+          return (
+            <Link
+              className={"game-card " + g.tone}
+              key={g.id}
+              to={"/patient/games/" + g.id}
+            >
+              <span className="game-icon">
+                <g.icon size={47} strokeWidth={1.5} />
               </span>
-              <h2>{t(g.key)}</h2>
-              <p>{t(g.desc)}</p>
-            </div>
-            <span className="text-link">
-              {t("start")}
-              <ArrowRight size={18} />
-            </span>
-          </Link>
-        ))}
+              <div>
+                <div style={{ display: "flex", gap: "8px", alignItems: "center", marginBottom: "4px" }}>
+                  <span className="badge">
+                    {t(nextLevel)} · 3–5 {t("minutes")}
+                  </span>
+                  {highScore !== undefined && highScore > 0 && (
+                    <span className="badge" style={{ background: "rgba(34, 197, 94, 0.15)", color: "#15803d", fontWeight: 600 }}>
+                      Best: {highScore}%
+                    </span>
+                  )}
+                </div>
+                <h2>{t(g.key)}</h2>
+                <p>{t(g.desc)}</p>
+              </div>
+              <span className="text-link">
+                {t("start")}
+                <ArrowRight size={18} />
+              </span>
+            </Link>
+          );
+        })}
       </div>
     </>
   );

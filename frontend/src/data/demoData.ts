@@ -307,6 +307,7 @@ export const defaultProgress = {
     { day: "Sat", routine_done: 6, meds_taken: 2, score: 83 },
     { day: "Sun", routine_done: 3, meds_taken: 1, score: 85 },
   ],
+  family: [],
   recommendations: {
     memory: { current_level: "easy", next_level: "easy", reason: "Start gently and take your time." },
     object: { current_level: "easy", next_level: "easy", reason: "Comfortable pace for daily recall." },
