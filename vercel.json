@@ -2,31 +2,9 @@
   "version": 2,
   "buildCommand": "npm --prefix frontend install && npm --prefix frontend run build",
   "outputDirectory": "frontend/dist",
-  "functions": {
-    "api/index.py": {
-      "includeFiles": "backend/**"
-    },
-    "api/[...path].py": {
-      "includeFiles": "backend/**"
-    },
-    "api/*.py": {
-      "includeFiles": "backend/**"
-    },
-    "api/**/*.py": {
-      "includeFiles": "backend/**"
-    }
-  },
   "rewrites": [
     {
-      "source": "/api/:match*",
-      "destination": "/api/index.py?match=:match*"
-    },
-    {
-      "source": "/api/(.*)",
-      "destination": "/api/index.py?0=$1"
-    },
-    {
-      "source": "/((?!api(?:/|$)).*)",
+      "source": "/(.*)",
       "destination": "/index.html"
     }
   ]

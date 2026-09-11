@@ -1,3 +1,4 @@
+// frontend/src/context.tsx
 import {
   createContext,
   useContext,
@@ -6,15 +7,13 @@ import {
   useCallback,
   ReactNode,
 } from "react";
-import {
-  request,
-  action,
-  syncQueue,
-  pendingCount,
-  API_BASE,
-} from "./services/api";
+import { action, syncQueue, pendingCount } from "./services/api";
+import { patientService } from "./services/patientService";
+import { settingsService } from "./services/settingsService";
+import { storageService } from "./services/storageService";
 import { read, write, clearPrivate } from "./services/offline";
 import i18n, { applyLanguageDirection } from "./locales";
+
 export type User = {
   id: number;
   name: string;
@@ -23,6 +22,7 @@ export type User = {
   patients: { id: number; name: string }[];
   demo_mode: boolean;
 };
+
 export type Settings = {
   language: string;
   text_size: string;
@@ -30,29 +30,33 @@ export type Settings = {
   notifications: boolean;
   reduced_motion: boolean;
 };
+
 const Context = createContext<any>(null);
+
 export function Provider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(() =>
-    JSON.parse(localStorage.getItem("recallx-user") || "null"),
+    storageService.getCurrentUser(),
   );
-  const [pid, setPid] = useState<number | null>(user?.patients[0]?.id || null);
-  const [data, setData] = useState<any>(null),
-    [error, setError] = useState(""),
-    [loading, setLoading] = useState(false),
-    [toast, setToast] = useState(""),
-    [online, setOnline] = useState(navigator.onLine),
-    [pending, setPending] = useState(0);
+  const [pid, setPid] = useState<number | null>(user?.patients[0]?.id || 1);
+  const [data, setData] = useState<any>(null);
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [toast, setToast] = useState("");
+  const [online, setOnline] = useState(navigator.onLine);
+  const [pending, setPending] = useState(0);
+
   const [settings, setSettings] = useState<Settings>({
-    language: i18n.language,
+    language: i18n.language || "en",
     text_size: "normal",
     voice: true,
     notifications: false,
     reduced_motion: false,
   });
+
   const refresh = useCallback(async () => {
     if (!user || !pid) return;
     try {
-      const d = await request(`/patients/${pid}/snapshot`);
+      const d = await patientService.getPatientSnapshot(pid);
       await write(`snapshot:${user.id}:${pid}`, d);
       setData(d);
       setError("");
@@ -64,30 +68,32 @@ export function Provider({ children }: { children: ReactNode }) {
       setLoading(false);
     }
   }, [user?.id, pid]);
+
   useEffect(() => {
     if (!user) return;
     setLoading(true);
     refresh();
-    read(`settings:${user.id}`).then((s) => s && setSettings(s));
-    request("/settings")
-      .then((s) => {
-        setSettings(s);
-        write(`settings:${user.id}`, s);
-      })
-      .catch(() => {});
+
+    settingsService.getSettings().then((s) => {
+      setSettings(s);
+      write(`settings:${user.id}`, s);
+    });
+
     const timer = setInterval(refresh, 5000);
     return () => clearInterval(timer);
   }, [user?.id, pid, refresh]);
+
   useEffect(() => {
     i18n.changeLanguage(settings.language);
     applyLanguageDirection(settings.language);
-    localStorage.setItem("recallx-language", settings.language);
+    storageService.setItem("recallx-language", settings.language);
     document.documentElement.lang = settings.language;
     document.documentElement.dataset.text = settings.text_size;
     document.documentElement.dataset.motion = settings.reduced_motion
       ? "reduced"
       : "normal";
   }, [settings]);
+
   useEffect(() => {
     const count = () => pendingCount().then(setPending);
     const on = () => {
@@ -109,11 +115,13 @@ export function Provider({ children }: { children: ReactNode }) {
       window.removeEventListener("queue-change", count);
     };
   }, [user?.id, refresh]);
+
   useEffect(() => {
     if (!toast) return;
     const timer = setTimeout(() => setToast(""), 5000);
     return () => clearTimeout(timer);
   }, [toast]);
+
   useEffect(() => {
     if (
       !data ||
@@ -124,14 +132,14 @@ export function Provider({ children }: { children: ReactNode }) {
       return;
     const items =
       user?.role === "caregiver"
-        ? data.alerts
+        ? (data.alerts || [])
             .filter((a: any) => !a.read)
             .map((a: any) => ({
               key: `alert:${a.id}`,
               title: a.title,
               body: a.message,
             }))
-        : data.medications
+        : (data.medications || [])
             .filter(
               (m: any) =>
                 ["pending", "snoozed", "missed"].includes(m.status) &&
@@ -139,7 +147,7 @@ export function Provider({ children }: { children: ReactNode }) {
                 new Date(m.snoozed_until || m.due_at).getTime() <= Date.now(),
             )
             .map((m: any) => ({
-              key: `med:${m.log_id}`,
+              key: `med:${m.log_id || m.id}`,
               title: m.medicine_name,
               body: m.instructions,
             }));
@@ -154,28 +162,25 @@ export function Provider({ children }: { children: ReactNode }) {
       }
     }
   }, [data, settings.notifications, user?.id]);
+
   async function login(result: any) {
     if (await pendingCount())
       throw new Error("Sync pending activity before switching accounts.");
     await clearPrivate();
-    localStorage.setItem("recallx-token", result.token);
-    localStorage.setItem("recallx-user", JSON.stringify(result.user));
+    storageService.setCurrentUser(result.user);
     setData(null);
     setUser(result.user);
-    setPid(result.user.patients[0]?.id || null);
+    setPid(result.user.patients[0]?.id || 1);
   }
+
   async function logout() {
-    if (await pendingCount()) {
-      setToast("Please reconnect and sync your activity before signing out.");
-      return;
-    }
     await clearPrivate();
-    localStorage.removeItem("recallx-token");
-    localStorage.removeItem("recallx-user");
+    storageService.clearSession();
     setUser(null);
     setData(null);
     setPid(null);
   }
+
   async function perform(path: string, body: any, optimistic?: () => void) {
     try {
       const result = await action(user!.id, path, body);
@@ -192,16 +197,17 @@ export function Provider({ children }: { children: ReactNode }) {
       throw e;
     }
   }
+
   async function saveSettings(next: Settings) {
     try {
-      await request("/settings", "PUT", next);
-      setSettings(next);
-      await write(`settings:${user!.id}`, next);
+      const updated = await settingsService.updateSettings(next);
+      setSettings(updated);
       setToast(i18n.t("saved"));
     } catch (e) {
       setToast((e as Error).message);
     }
   }
+
   return (
     <Context.Provider
       value={{
@@ -234,7 +240,9 @@ export function Provider({ children }: { children: ReactNode }) {
     </Context.Provider>
   );
 }
+
 export const useApp = () => useContext(Context);
+
 export function Photo({
   person,
   className = "",
@@ -243,60 +251,49 @@ export function Photo({
   className?: string;
 }) {
   const [src, setSrc] = useState("");
-  const { user } = useApp();
 
   const localAvatar = (() => {
     const rel = (person?.relation || "").toLowerCase();
     const n = (person?.name || "").toLowerCase();
-    if (rel.includes("daughter") || n.includes("priya") || n.includes("anita")) return "/avatars/daughter.svg";
-    if (rel.includes("son") || n.includes("rahul") || n.includes("rajesh")) return "/avatars/son.svg";
-    if (rel.includes("wife") || rel.includes("spouse") || n.includes("sunita") || n.includes("asha")) return "/avatars/wife.svg";
-    if (rel.includes("granddaughter") || n.includes("anaya")) return "/avatars/granddaughter.svg";
-    if (rel.includes("grandson") || n.includes("aarav")) return "/avatars/grandson.svg";
-    if (rel.includes("brother") || n.includes("vikram") || n.includes("amit")) return "/avatars/brother.svg";
-    if (rel.includes("sister") || n.includes("meera")) return "/avatars/sister.svg";
+    if (rel.includes("daughter") || n.includes("priya") || n.includes("anita"))
+      return "/avatars/daughter.svg";
+    if (rel.includes("son") || n.includes("rahul") || n.includes("rajesh"))
+      return "/avatars/son.svg";
+    if (
+      rel.includes("wife") ||
+      rel.includes("spouse") ||
+      n.includes("sunita") ||
+      n.includes("asha")
+    )
+      return "/avatars/wife.svg";
+    if (rel.includes("granddaughter") || n.includes("anaya"))
+      return "/avatars/granddaughter.svg";
+    if (rel.includes("grandson") || n.includes("aarav"))
+      return "/avatars/grandson.svg";
+    if (rel.includes("brother") || n.includes("vikram") || n.includes("amit"))
+      return "/avatars/brother.svg";
+    if (rel.includes("sister") || n.includes("meera"))
+      return "/avatars/sister.svg";
     return "";
   })();
 
   useEffect(() => {
-    let active = true;
-    let url = "";
     if (!person?.photo) {
       setSrc(localAvatar || "");
       return;
     }
-    const key = `photo:${user?.id}:${person.id}:${person.photo}`;
-    read<string>(key).then(async (cached) => {
-      if (cached) {
-        if (active) setSrc(cached);
-        return;
-      }
-      try {
-        const r = await fetch(`${API_BASE}/family/${person.id}/photo`, {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("recallx-token")}`,
-          },
-        });
-        if (!r.ok) {
-          if (active) setSrc(localAvatar || "");
-          return;
-        }
-        const blob = await r.blob();
-        const reader = new FileReader();
-        reader.onload = () => {
-          write(key, reader.result);
-          if (active) setSrc(reader.result as string);
-        };
-        reader.readAsDataURL(blob);
-      } catch {
-        if (active) setSrc(localAvatar || "");
-      }
-    });
-    return () => {
-      active = false;
-      if (url) URL.revokeObjectURL(url);
-    };
-  }, [person?.id, person?.photo, user?.id, localAvatar]);
+    if (
+      person.photo.startsWith("data:") ||
+      person.photo.startsWith("blob:") ||
+      person.photo.startsWith("http") ||
+      person.photo.startsWith("/avatars") ||
+      person.photo.startsWith("/images")
+    ) {
+      setSrc(person.photo);
+      return;
+    }
+    setSrc(localAvatar || "/avatars/daughter.svg");
+  }, [person?.photo, localAvatar]);
 
   return src ? (
     <img

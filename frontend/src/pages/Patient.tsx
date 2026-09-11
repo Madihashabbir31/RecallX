@@ -22,6 +22,7 @@ import {
   Settings as SettingsIcon,
   LogOut,
   Activity,
+  RotateCcw,
 } from "lucide-react";
 import {
   ResponsiveContainer,
@@ -46,12 +47,14 @@ import {
   EmptyState,
   StatCard,
 } from "../components/ui";
-import { request } from "../services/api";
+import { patientService } from "../services/patientService";
+import { storageService } from "../services/storageService";
 import { write } from "../services/offline";
 import { speak, listen } from "../services/voice";
 import { FamilyMemberCard } from "../components/FamilyMemberCard";
 import { LanguageSelector } from "../components/LanguageSelector";
 import { LANGUAGES } from "../locales";
+import { defaultProgress } from "../data/demoData";
 export const gameMeta = [
   {
     id: "memory",
@@ -202,13 +205,13 @@ export function Home() {
   const { t } = useTranslation();
   const { data } = useApp();
   const hour = new Date().getHours();
-  const rt = data.routines.filter((r: any) => r.status !== "not_scheduled");
+  const rt = (data?.routines || []).filter((r: any) => r.status !== "not_scheduled");
   const completed = rt.filter((r: any) => r.status === "completed").length;
-  const med = data.medications.find((m: any) =>
+  const med = (data?.medications || []).find((m: any) =>
     ["pending", "snoozed", "missed"].includes(m.status),
   );
   const recommendation = [...gameMeta].sort((a, b) => {
-    const all = data.progress.recent;
+    const all = data?.progress?.recent || [];
     return (
       all.filter((s: any) => s.game_type === a.id).length -
       all.filter((s: any) => s.game_type === b.id).length
@@ -217,7 +220,7 @@ export function Home() {
   return (
     <>
       <PageHeader
-        title={`${t(hour < 12 ? "morning" : hour < 17 ? "afternoon" : "evening")}, ${data.patient.name}`}
+        title={`${t(hour < 12 ? "morning" : hour < 17 ? "afternoon" : "evening")}, ${data?.patient?.name || "Asha Ji"}`}
         subtitle={t("smallSteps")}
       >
         <div className="date-chip">
@@ -243,7 +246,7 @@ export function Home() {
               <ArrowRight size={20} />
             </Link>
             <span className="hero-meta">
-              {t(data.progress.recommendations[recommendation.id].next_level)}{" "}
+              {t(data?.progress?.recommendations?.[recommendation.id]?.next_level || "easy")}{" "}
               <span>·</span> 3–5 {t("minutes")}
             </span>
           </div>
@@ -405,7 +408,7 @@ export function Medications() {
   async function demo() {
     setBusy(true);
     try {
-      await request(`/patients/${pid}/demo-reminder`, "POST");
+      await patientService.triggerDemoReminder(pid || 1);
       await refresh();
       setToast(
         "Demo timer started. The caregiver alert appears after 30 seconds.",
@@ -459,7 +462,7 @@ export function Family() {
 export function Progress({ caregiver = false }: { caregiver?: boolean }) {
   const { t } = useTranslation();
   const { data } = useApp();
-  const p = data.progress;
+  const p = data?.progress || defaultProgress;
   return (
     <>
       <PageHeader
@@ -765,7 +768,7 @@ export function Voice() {
 }
 export function Settings() {
   const { t } = useTranslation();
-  const { settings, saveSettings, setToast } = useApp();
+  const { settings, saveSettings, setToast, refresh } = useApp();
   const [draft, setDraft] = useState(settings);
   useEffect(() => setDraft(settings), [settings]);
   async function notifications() {
@@ -780,6 +783,13 @@ export function Settings() {
     const p = await Notification.requestPermission();
     setDraft({ ...draft, notifications: p === "granted" });
   }
+
+  async function handleResetDemo() {
+    storageService.resetDemoData();
+    await refresh();
+    setToast("Demo data restored to defaults.");
+  }
+
   return (
     <>
       <PageHeader title={t("settings")} subtitle={t("practice")} />
@@ -838,6 +848,14 @@ export function Settings() {
         <PrimaryButton onClick={() => saveSettings(draft)}>
           {t("save")}
         </PrimaryButton>
+
+        <div style={{ marginTop: "24px", paddingTop: "16px", borderTop: "1px solid var(--border, #e2e8f0)", display: "flex", flexDirection: "column", gap: "8px" }}>
+          <span style={{ fontSize: "0.9rem", color: "var(--muted, #64748b)" }}>Demo Management</span>
+          <SecondaryButton type="button" onClick={handleResetDemo}>
+            <RotateCcw size={16} />
+            Reset Demo Data
+          </SecondaryButton>
+        </div>
       </RecallCard>
     </>
   );

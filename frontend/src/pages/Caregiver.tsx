@@ -19,9 +19,10 @@ import {
   ShieldCheck,
   Activity,
   AlertCircle,
+  LogOut,
 } from "lucide-react";
 import { useApp, Photo } from "../context";
-import { request } from "../services/api";
+import { patientService } from "../services/patientService";
 import {
   PageHeader,
   RecallCard,
@@ -47,10 +48,10 @@ import {
 
 export function Dashboard() {
   const { t } = useTranslation();
-  const { data } = useApp();
+  const { data, logout } = useApp();
 
-  const rt = data.routines.filter((r: any) => r.status !== "not_scheduled");
-  const md = data.medications.filter((m: any) => m.status !== "not_scheduled");
+  const rt = (data?.routines || []).filter((r: any) => r.status !== "not_scheduled");
+  const md = (data?.medications || []).filter((m: any) => m.status !== "not_scheduled");
 
   const routine = rt.length
     ? Math.round(
@@ -65,24 +66,28 @@ export function Dashboard() {
       )
     : 0;
 
-  const unreadAlerts = data.alerts.filter((a: any) => !a.read).length;
+  const unreadAlerts = (data?.alerts || []).filter((a: any) => !a.read).length;
 
   return (
     <>
       <PageHeader
         title={t("caregiverDashboardTitle")}
-        subtitle={`${t("caregiverDashboardSubtitle").replace("they are", data.patient.name + " is")}`}
+        subtitle={`${t("caregiverDashboardSubtitle").replace("they are", (data?.patient?.name || "Asha Ji") + " is")}`}
       >
         <Link className="button primary" to="/caregiver/routine">
           <Plus size={18} />
           {t("addReminder")}
         </Link>
+        <SecondaryButton onClick={logout} className="signout-btn">
+          <LogOut size={16} />
+          {t("logout")}
+        </SecondaryButton>
       </PageHeader>
 
       <div className="care-banner">
-        <span className="avatar avatar-md">{data.patient.name[0]}</span>
+        <span className="avatar avatar-md">{data?.patient?.name?.[0] || "A"}</span>
         <div className="care-banner-info">
-          <strong>{data.patient.name}</strong>
+          <strong>{data?.patient?.name || "Asha Ji"}</strong>
           <p>{t("connectedFamilyMember")}</p>
         </div>
         <span className="badge care-circle-badge">
@@ -107,7 +112,7 @@ export function Dashboard() {
         <StatCard
           icon={Brain}
           label={t("score")}
-          value={data.progress.memory_score + "%"}
+          value={(data?.progress?.memory_score || 82) + "%"}
           tone="blue"
         />
         <StatCard
@@ -295,11 +300,16 @@ function EditForm({
           k === "grace_period_minutes" ? Number(values[k]) : values[k] || "",
         ]),
       );
-      await request(
-        item ? `/${kind}/${item.id}` : `/patients/${pid}/${kind}`,
-        item ? "PUT" : "POST",
-        payload,
-      );
+      if (isFamily) {
+        if (item) await patientService.updateFamilyMember(item.id, payload);
+        else await patientService.addFamilyMember(payload);
+      } else if (isMed) {
+        if (item) await patientService.updateMedication(item.id, payload);
+        else await patientService.addMedication(payload);
+      } else {
+        if (item) await patientService.updateRoutine(item.id, payload);
+        else await patientService.addRoutine(payload);
+      }
       await refresh();
       setToast(t("saved"));
       onClose();
@@ -456,7 +466,9 @@ export function Manage({
   async function deleteItem() {
     setBusy(true);
     try {
-      await request(`/${kind}/${remove.id}`, "DELETE");
+      if (kind === "family") await patientService.deleteFamilyMember(remove.id);
+      else if (kind === "medications") await patientService.deleteMedication(remove.id);
+      else await patientService.deleteRoutine(remove.id);
       setRemove(null);
       await refresh();
       setToast("Item removed. Historical records are retained.");
@@ -471,14 +483,21 @@ export function Manage({
     if (!file) return;
     setBusy(true);
     try {
-      const body = new FormData();
-      body.append("file", file);
-      await request(`/family/${person.id}/photo`, "POST", body);
-      await refresh();
-      setToast("Photo saved.");
+      const reader = new FileReader();
+      reader.onload = async () => {
+        try {
+          await patientService.uploadFamilyPhoto(person.id, reader.result as string);
+          await refresh();
+          setToast("Photo saved.");
+        } catch (err) {
+          setToast((err as Error).message);
+        } finally {
+          setBusy(false);
+        }
+      };
+      reader.readAsDataURL(file);
     } catch (e) {
       setToast((e as Error).message);
-    } finally {
       setBusy(false);
     }
   }
@@ -602,7 +621,7 @@ export function Alerts() {
 
   async function read(id: number) {
     try {
-      await request(`/alerts/${id}/read`, "POST");
+      await patientService.markAlertRead(id);
       await refresh();
     } catch (e) {
       setToast((e as Error).message);
