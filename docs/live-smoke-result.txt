@@ -1,0 +1,4 @@
+Executed: 2026-09-11
+PASS: compiled frontend, deep routes, assets, manifest, service worker, demo login, real reminder expiry in 33.1s and caregiver acknowledgement.
+
+This used FastAPI TestClient with a real background reminder loop and an isolated SQLite database. It did not use a browser.

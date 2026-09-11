@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 160" width="160" height="160">
+  <defs>
+    <linearGradient id="bg-brother" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fef3c7"/>
+      <stop offset="100%" stop-color="#fde68a"/>
+    </linearGradient>
+    <linearGradient id="kurta-brother" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#b45309"/>
+      <stop offset="100%" stop-color="#78350f"/>
+    </linearGradient>
+  </defs>
+  <circle cx="80" cy="80" r="80" fill="url(#bg-brother)"/>
+  <!-- Clothes -->
+  <path d="M34 160 C34 128 50 120 80 120 C110 120 126 128 126 160 Z" fill="url(#kurta-brother)"/>
+  <!-- Nehru collar -->
+  <rect x="72" y="118" width="16" height="12" rx="3" fill="#92400e"/>
+  <!-- Neck -->
+  <rect x="71" y="96" width="18" height="26" rx="6" fill="#fed7aa"/>
+  <!-- Face -->
+  <ellipse cx="80" cy="74" rx="27" ry="32" fill="#fed7aa"/>
+  <!-- Hair: mature silver-gray neatly combed -->
+  <path d="M52 68 C51 44 65 38 80 38 C95 38 109 44 108 68 C103 52 94 48 80 48 C66 48 56 52 52 68 Z" fill="#475569"/>
+  <!-- Mustache -->
+  <path d="M68 86 Q75 83 80 85 Q85 83 92 86 Q86 89 80 87 Q74 89 68 86 Z" fill="#334155"/>
+  <!-- Eyes -->
+  <ellipse cx="69" cy="71" rx="3.4" ry="3.8" fill="#1e293b"/>
+  <ellipse cx="91" cy="71" rx="3.4" ry="3.8" fill="#1e293b"/>
+  <circle cx="70" cy="69.5" r="1.1" fill="#ffffff"/>
+  <circle cx="92" cy="69.5" r="1.1" fill="#ffffff"/>
+  <!-- Eyebrows -->
+  <path d="M64 64 Q69 61 74 64" stroke="#475569" stroke-width="2.2" stroke-linecap="round" fill="none"/>
+  <path d="M86 64 Q91 61 96 64" stroke="#475569" stroke-width="2.2" stroke-linecap="round" fill="none"/>
+  <!-- Nose -->
+  <path d="M80 70 L79 80 L83 80" stroke="#ea580c" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  <!-- Smile -->
+  <path d="M73 93 Q80 97 87 93" stroke="#991b1b" stroke-width="2.2" stroke-linecap="round" fill="none"/>
+</svg>

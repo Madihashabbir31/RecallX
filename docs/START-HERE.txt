@@ -1,0 +1,22 @@
+RecallX — quick local start
+
+1. Extract the entire ZIP into a normal folder.
+2. Install Python 3.11 or newer, including the Python launcher on Windows.
+3. Double-click start-windows.bat.
+4. Wait until the terminal says Uvicorn is running.
+5. Open http://localhost:8000 in Chrome or Edge.
+6. Choose Enter Patient Demo or Enter Caregiver Demo.
+
+The first start requires internet to install Python dependencies.
+The frontend is already built; Node.js is needed only to edit/rebuild it.
+Keep the terminal open while using RecallX.
+
+Demo password: RecallX@2026
+Patient email: asha@recallx.demo
+Caregiver email: rahul@recallx.demo
+
+Full setup, architecture, demo flow, API docs and development instructions:
+README.md
+
+Actual tests and outstanding browser/device validation:
+docs/TESTING.md

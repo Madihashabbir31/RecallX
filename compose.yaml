@@ -1,0 +1,14 @@
+services:
+  recallx:
+    build: .
+    ports:
+      - "127.0.0.1:8000:8000"
+    environment:
+      DEMO_MODE: "true"
+      DEMO_GRACE_SECONDS: "30"
+      APP_TIMEZONE: Asia/Kolkata
+      FRONTEND_URL: http://localhost:8000
+    volumes:
+      - recallx-data:/app/backend/data
+volumes:
+  recallx-data:

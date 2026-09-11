@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 160" width="160" height="160">
+  <defs>
+    <linearGradient id="bg-wife" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fdf2f8"/>
+      <stop offset="100%" stop-color="#fbcfe8"/>
+    </linearGradient>
+    <linearGradient id="hair-wife" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#64748b"/>
+      <stop offset="100%" stop-color="#334155"/>
+    </linearGradient>
+    <linearGradient id="saree-wife" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#db2777"/>
+      <stop offset="100%" stop-color="#9d174d"/>
+    </linearGradient>
+  </defs>
+  <circle cx="80" cy="80" r="80" fill="url(#bg-wife)"/>
+  <!-- Hair bun -->
+  <circle cx="80" cy="38" r="22" fill="url(#hair-wife)"/>
+  <!-- Clothes / Saree -->
+  <path d="M34 160 C34 128 50 120 80 120 C110 120 126 128 126 160 Z" fill="url(#saree-wife)"/>
+  <!-- Saree pallu drape -->
+  <path d="M48 160 L78 120 L96 120 L64 160 Z" fill="#f43f5e"/>
+  <!-- Neck -->
+  <rect x="71" y="96" width="18" height="26" rx="6" fill="#fed7aa"/>
+  <!-- Face -->
+  <ellipse cx="80" cy="74" rx="28" ry="32" fill="#fed7aa"/>
+  <!-- Hair styled with gentle gray streaks -->
+  <path d="M52 74 C50 48 64 42 80 42 C96 42 110 48 108 74 C104 56 94 50 80 50 C66 50 56 56 52 74 Z" fill="url(#hair-wife)"/>
+  <!-- Eyes with gentle warm smile lines -->
+  <ellipse cx="69" cy="73" rx="3.5" ry="3.5" fill="#1e293b"/>
+  <ellipse cx="91" cy="73" rx="3.5" ry="3.5" fill="#1e293b"/>
+  <circle cx="70" cy="71.5" r="1.1" fill="#ffffff"/>
+  <circle cx="92" cy="71.5" r="1.1" fill="#ffffff"/>
+  <!-- Gentle crow's feet -->
+  <path d="M63 73 L60 71 M63 75 L59 75 M63 77 L60 79" stroke="#ea580c" stroke-width="1.2" stroke-linecap="round"/>
+  <path d="M97 73 L100 71 M97 75 L101 75 M97 77 L100 79" stroke="#ea580c" stroke-width="1.2" stroke-linecap="round"/>
+  <!-- Eyebrows -->
+  <path d="M64 65 Q69 63 74 66" stroke="#475569" stroke-width="2.2" stroke-linecap="round" fill="none"/>
+  <path d="M86 66 Q91 63 96 65" stroke="#475569" stroke-width="2.2" stroke-linecap="round" fill="none"/>
+  <!-- Nose -->
+  <path d="M80 73 L79 81 L83 81" stroke="#ea580c" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  <!-- Warm gentle smile -->
+  <path d="M72 88 Q80 95 88 88" stroke="#be123c" stroke-width="2.6" stroke-linecap="round" fill="none"/>
+  <!-- Red Bindi -->
+  <circle cx="80" cy="62" r="2.2" fill="#be123c"/>
+  <!-- Earrings -->
+  <circle cx="51" cy="79" r="3.2" fill="#eab308"/>
+  <circle cx="109" cy="79" r="3.2" fill="#eab308"/>
+</svg>

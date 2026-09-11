@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 160" width="160" height="160">
+  <defs>
+    <linearGradient id="bg-sister" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fdf4ff"/>
+      <stop offset="100%" stop-color="#f5d0fe"/>
+    </linearGradient>
+    <linearGradient id="saree-sister" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0284c7"/>
+      <stop offset="100%" stop-color="#0369a1"/>
+    </linearGradient>
+  </defs>
+  <circle cx="80" cy="80" r="80" fill="url(#bg-sister)"/>
+  <!-- Hair back -->
+  <circle cx="80" cy="40" r="21" fill="#334155"/>
+  <!-- Saree -->
+  <path d="M34 160 C34 128 50 120 80 120 C110 120 126 128 126 160 Z" fill="url(#saree-sister)"/>
+  <path d="M46 160 L76 120 L94 120 L62 160 Z" fill="#38bdf8"/>
+  <!-- Neck -->
+  <rect x="71" y="96" width="18" height="26" rx="6" fill="#fed7aa"/>
+  <!-- Face -->
+  <ellipse cx="80" cy="74" rx="28" ry="32" fill="#fed7aa"/>
+  <!-- Hair: mature parted hair -->
+  <path d="M52 74 C50 48 64 42 80 42 C96 42 110 48 108 74 C104 56 94 50 80 50 C66 50 56 56 52 74 Z" fill="#334155"/>
+  <!-- Glasses -->
+  <circle cx="68" cy="73" r="10" fill="none" stroke="#64748b" stroke-width="1.8"/>
+  <circle cx="92" cy="73" r="10" fill="none" stroke="#64748b" stroke-width="1.8"/>
+  <line x1="78" y1="73" x2="82" y2="73" stroke="#64748b" stroke-width="1.8"/>
+  <!-- Eyes -->
+  <ellipse cx="68" cy="73" rx="3" ry="3.5" fill="#1e293b"/>
+  <ellipse cx="92" cy="73" rx="3" ry="3.5" fill="#1e293b"/>
+  <circle cx="69" cy="71.5" r="1.1" fill="#ffffff"/>
+  <circle cx="93" cy="71.5" r="1.1" fill="#ffffff"/>
+  <!-- Eyebrows -->
+  <path d="M64 63 Q68 61 72 63" stroke="#334155" stroke-width="2" stroke-linecap="round" fill="none"/>
+  <path d="M88 63 Q92 61 96 63" stroke="#334155" stroke-width="2" stroke-linecap="round" fill="none"/>
+  <!-- Nose -->
+  <path d="M80 73 L79 81 L83 81" stroke="#ea580c" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  <!-- Smile -->
+  <path d="M73 88 Q80 95 87 88" stroke="#be123c" stroke-width="2.4" stroke-linecap="round" fill="none"/>
+  <!-- Bindi -->
+  <circle cx="80" cy="61" r="2" fill="#be123c"/>
+</svg>

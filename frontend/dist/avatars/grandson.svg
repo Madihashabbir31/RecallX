@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 160" width="160" height="160">
+  <defs>
+    <linearGradient id="bg-grandson" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ecfdf5"/>
+      <stop offset="100%" stop-color="#a7f3d0"/>
+    </linearGradient>
+    <linearGradient id="hoodie-grandson" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#059669"/>
+      <stop offset="100%" stop-color="#047857"/>
+    </linearGradient>
+  </defs>
+  <circle cx="80" cy="80" r="80" fill="url(#bg-grandson)"/>
+  <!-- Clothes / hoodie -->
+  <path d="M38 160 C38 132 54 122 80 122 C106 122 122 132 122 160 Z" fill="url(#hoodie-grandson)"/>
+  <circle cx="80" cy="132" r="6" fill="#fcd34d"/>
+  <!-- Neck -->
+  <rect x="73" y="100" width="14" height="24" rx="5" fill="#fed7aa"/>
+  <!-- Face -->
+  <ellipse cx="80" cy="76" rx="25" ry="29" fill="#fed7aa"/>
+  <!-- Cheerful boyish hair -->
+  <path d="M53 66 C50 44 65 35 80 35 C95 35 107 44 107 66 C102 50 94 45 80 45 C66 45 58 50 53 66 Z" fill="#1c1917"/>
+  <path d="M60 42 Q75 32 88 40" stroke="#1c1917" stroke-width="4" stroke-linecap="round"/>
+  <!-- Big cheerful eyes -->
+  <ellipse cx="70" cy="74" rx="4" ry="4.5" fill="#1c1917"/>
+  <ellipse cx="90" cy="74" rx="4" ry="4.5" fill="#1c1917"/>
+  <circle cx="71.5" cy="72.5" r="1.5" fill="#ffffff"/>
+  <circle cx="91.5" cy="72.5" r="1.5" fill="#ffffff"/>
+  <!-- Eyebrows -->
+  <path d="M65 67 Q70 65 75 67" stroke="#1c1917" stroke-width="2" stroke-linecap="round" fill="none"/>
+  <path d="M85 67 Q90 65 95 67" stroke="#1c1917" stroke-width="2" stroke-linecap="round" fill="none"/>
+  <!-- Rosy cheeks -->
+  <ellipse cx="63" cy="81" rx="5" ry="3" fill="#fca5a5" opacity="0.6"/>
+  <ellipse cx="97" cy="81" rx="5" ry="3" fill="#fca5a5" opacity="0.6"/>
+  <!-- Nose -->
+  <circle cx="80" cy="79" r="1.8" fill="#ea580c"/>
+  <!-- Big happy smile -->
+  <path d="M72 87 Q80 97 88 87" stroke="#b91c1c" stroke-width="2.6" stroke-linecap="round" fill="none"/>
+</svg>
