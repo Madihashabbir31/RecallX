@@ -466,7 +466,8 @@ def voice(
         path = "/patient/routine"
     else:
         for p in db.query(FamilyMember).filter_by(patient_id=pid, active=True):
-            if p.name.lower() in q:
+            names = [p.name.lower()] + [x.lower() for x in p.name.split()]
+            if any(part in q for part in names):
                 reply = f"{p.name} is your {p.relation}. {p.memory_note} {p.important_facts}"
                 path = "/patient/family"
                 break

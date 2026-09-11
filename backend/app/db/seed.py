@@ -70,9 +70,9 @@ def seed(db):
             "Enjoys morning classical music and herbal tea.",
         ),
         (
-            "Rajesh Sharma",
+            "Rahul Sharma",
             "Son",
-            "Rajesh lives in Pune and calls every evening on video.",
+            "Rahul lives in Pune and calls every evening on video.",
             "Works as an engineer and loves cricket.",
         ),
         (

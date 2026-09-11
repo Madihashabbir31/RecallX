@@ -77,8 +77,29 @@ export async function action(userId: number, path: string, body: any) {
     throw e;
   }
 }
+const fallbackDemo = (role: string) => {
+  const isCaregiver = role === "caregiver";
+  return {
+    token: "demo-jwt-token",
+    user: {
+      id: isCaregiver ? 2 : 1,
+      name: isCaregiver ? "Rahul" : "Asha Ji",
+      email: isCaregiver ? "rahul@recallx.demo" : "asha@recallx.demo",
+      role: isCaregiver ? "caregiver" : "patient",
+      patients: [{ id: 1, name: "Asha Ji" }],
+      demo_mode: true,
+    },
+  };
+};
+
 export const authService = {
   login: (email: string, password: string) =>
     request("/auth/login", "POST", { email, password }),
-  demo: (role: string) => request("/auth/demo/" + role, "POST"),
+  demo: async (role: string) => {
+    try {
+      return await request("/auth/demo/" + role, "POST");
+    } catch {
+      return fallbackDemo(role);
+    }
+  },
 };

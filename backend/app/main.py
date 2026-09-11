@@ -1,4 +1,4 @@
-import asyncio, contextlib, logging
+import os, asyncio, contextlib, logging
 from pathlib import Path
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
@@ -27,22 +27,24 @@ async def lifespan(app):
     with SessionLocal() as db:
         if DEMO_MODE:
             seed(db)
-    task = asyncio.create_task(reminder_loop())
+    is_serverless = bool(os.getenv("VERCEL") or os.getenv("AWS_LAMBDA_FUNCTION_NAME"))
+    task = None
+    if not is_serverless:
+        task = asyncio.create_task(reminder_loop())
     yield
-    task.cancel()
-    with contextlib.suppress(asyncio.CancelledError):
-        await task
+    if task:
+        task.cancel()
+        with contextlib.suppress(asyncio.CancelledError):
+            await task
 
 
 app = FastAPI(title="RecallX API", version="1.0.0", lifespan=lifespan)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=list(
-        set([FRONTEND_URL, "http://localhost:5173", "http://127.0.0.1:5173"])
-    ),
+    allow_origins=["*"],
     allow_credentials=False,
-    allow_methods=["GET", "POST", "PUT", "DELETE"],
-    allow_headers=["Authorization", "Content-Type"],
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 app.include_router(router)
 
