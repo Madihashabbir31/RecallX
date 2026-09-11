@@ -1,3 +1,4 @@
+import { useState } from "react";
 import {
   Routes,
   Route,
@@ -22,6 +23,8 @@ import {
   Settings as SettingsIcon,
   WifiOff,
   RefreshCw,
+  Menu,
+  X,
 } from "lucide-react";
 import { useApp } from "./context";
 import { authService } from "./services/authService";
@@ -71,6 +74,7 @@ const careNav = [
 
 function Layout({ role }: { role: "patient" | "caregiver" }) {
   const { t } = useTranslation();
+  const [drawerOpen, setDrawerOpen] = useState(false);
   const {
     user,
     data,
@@ -89,9 +93,27 @@ function Layout({ role }: { role: "patient" | "caregiver" }) {
 
   return (
     <div className={"app-shell " + (caregiver ? "caregiver" : "patient")}>
-      <aside className="sidebar">
+      {drawerOpen && (
+        <div
+          className="sidebar-backdrop"
+          onClick={() => setDrawerOpen(false)}
+          aria-hidden="true"
+        />
+      )}
+
+      <aside className={"sidebar " + (drawerOpen ? "drawer-open" : "")}>
         <div className="sidebar-top-fixed">
-          <Brand />
+          <div className="sidebar-header-row">
+            <Brand />
+            <button
+              type="button"
+              className="sidebar-drawer-close"
+              onClick={() => setDrawerOpen(false)}
+              aria-label="Close menu"
+            >
+              <X size={20} />
+            </button>
+          </div>
           <div className="sidebar-subtitle">
             {caregiver ? t("careCircle").toUpperCase() : t("rememberReconnect")}
           </div>
@@ -105,6 +127,7 @@ function Layout({ role }: { role: "patient" | "caregiver" }) {
                 key={path}
                 to={`/${role}${path ? "/" + path : ""}`}
                 className={({ isActive }) => (isActive ? "active" : "")}
+                onClick={() => setDrawerOpen(false)}
               >
                 <Icon size={20} className="nav-icon" />
                 <span className="nav-label">{t(key)}</span>
@@ -120,19 +143,19 @@ function Layout({ role }: { role: "patient" | "caregiver" }) {
 
           {!caregiver && (
             <nav className="secondary-nav" aria-label="Additional patient navigation">
-              <NavLink to="/patient/family">
+              <NavLink to="/patient/family" onClick={() => setDrawerOpen(false)}>
                 <Users size={19} className="nav-icon" />
                 <span className="nav-label">{t("family")}</span>
               </NavLink>
-              <NavLink to="/patient/medications">
+              <NavLink to="/patient/medications" onClick={() => setDrawerOpen(false)}>
                 <Pill size={19} className="nav-icon" />
                 <span className="nav-label">{t("medications")}</span>
               </NavLink>
-              <NavLink to="/patient/progress">
+              <NavLink to="/patient/progress" onClick={() => setDrawerOpen(false)}>
                 <Activity size={19} className="nav-icon" />
                 <span className="nav-label">{t("progress")}</span>
               </NavLink>
-              <NavLink to="/patient/settings">
+              <NavLink to="/patient/settings" onClick={() => setDrawerOpen(false)}>
                 <SettingsIcon size={19} className="nav-icon" />
                 <span className="nav-label">{t("settings")}</span>
               </NavLink>
@@ -144,6 +167,14 @@ function Layout({ role }: { role: "patient" | "caregiver" }) {
       <div className="main-shell">
         <header className="topbar">
           <div className="topbar-left">
+            <button
+              type="button"
+              className="mobile-nav-toggle"
+              onClick={() => setDrawerOpen(true)}
+              aria-label="Open menu"
+            >
+              <Menu size={22} />
+            </button>
             <span className="topbar-title">
               {caregiver ? t("caregiverSpace") : t("gentle")}
             </span>
@@ -204,9 +235,9 @@ function Layout({ role }: { role: "patient" | "caregiver" }) {
       </div>
 
       {/* Mobile bottom nav for patient */}
-      {!caregiver && (
+      {!caregiver ? (
         <nav className="bottom-nav" aria-label="Mobile navigation">
-          {patientNav.map(([path, key, Icon]) => (
+          {patientNav.slice(0, 4).map(([path, key, Icon]) => (
             <NavLink
               end={!path}
               key={path}
@@ -216,6 +247,50 @@ function Layout({ role }: { role: "patient" | "caregiver" }) {
               <span>{t(key)}</span>
             </NavLink>
           ))}
+          <button
+            type="button"
+            className="bottom-nav-action"
+            onClick={() => setDrawerOpen(true)}
+            aria-label="More navigation options"
+          >
+            <Menu size={20} />
+            <span>{t("menu") || "More"}</span>
+          </button>
+        </nav>
+      ) : (
+        <nav className="bottom-nav caregiver-bottom-nav" aria-label="Caregiver mobile navigation">
+          <NavLink end to="/caregiver">
+            <HomeIcon size={20} />
+            <span>{t("overview")}</span>
+          </NavLink>
+          <NavLink to="/caregiver/routine">
+            <CalendarDays size={20} />
+            <span>{t("routine")}</span>
+          </NavLink>
+          <NavLink to="/caregiver/medications">
+            <Pill size={20} />
+            <span>{t("medications")}</span>
+          </NavLink>
+          <NavLink to="/caregiver/alerts" className="bottom-nav-alert-link">
+            <div className="bottom-nav-icon-wrapper">
+              <Bell size={20} />
+              {!!data?.alerts?.filter((a: any) => !a.read).length && (
+                <span className="bottom-nav-badge">
+                  {data.alerts.filter((a: any) => !a.read).length}
+                </span>
+              )}
+            </div>
+            <span>{t("alerts")}</span>
+          </NavLink>
+          <button
+            type="button"
+            className="bottom-nav-action"
+            onClick={() => setDrawerOpen(true)}
+            aria-label="More navigation options"
+          >
+            <Menu size={20} />
+            <span>{t("menu") || "More"}</span>
+          </button>
         </nav>
       )}
     </div>
