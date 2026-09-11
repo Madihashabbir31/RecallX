@@ -8,13 +8,17 @@ class Base(DeclarativeBase):
     pass
 
 
+db_url = DATABASE_URL
+if db_url.startswith("postgres://"):
+    db_url = db_url.replace("postgres://", "postgresql://", 1)
+
 engine = create_engine(
-    DATABASE_URL,
+    db_url,
     connect_args=(
-        {"check_same_thread": False} if DATABASE_URL.startswith("sqlite") else {}
+        {"check_same_thread": False} if db_url.startswith("sqlite") else {}
     ),
 )
-if DATABASE_URL.startswith("sqlite"):
+if db_url.startswith("sqlite"):
 
     @event.listens_for(engine, "connect")
     def pragmas(conn, _):

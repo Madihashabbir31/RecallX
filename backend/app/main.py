@@ -4,6 +4,7 @@ from contextlib import asynccontextmanager
 from urllib.parse import parse_qs, urlencode
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 from app.core.config import FRONTEND_URL, DEMO_MODE
 from app.db.session import Base, engine, SessionLocal
@@ -60,6 +61,15 @@ app.add_middleware(
 )
 
 
+@app.exception_handler(Exception)
+async def global_exception_handler(request, exc):
+    logging.exception("Unhandled Exception on %s %s: %s", request.method, request.url, exc)
+    return JSONResponse(
+        status_code=500,
+        content={"detail": "Internal server error. Please try again later."}
+    )
+
+
 @app.middleware("http")
 async def ensure_api_path(request, call_next):
     path = request.scope.get("path", "")
@@ -85,6 +95,8 @@ async def ensure_api_path(request, call_next):
             )
             if captured:
                 clean_captured = captured.strip().lstrip("/")
+                if clean_captured.startswith("api/"):
+                    clean_captured = clean_captured[4:]
                 path = f"/api/{clean_captured}"
             else:
                 path = path.replace("/api/index.py", "/api").replace("/index.py", "")

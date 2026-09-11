@@ -35,12 +35,17 @@ def identity(db, user):
         if links
         else ([user.id] if user.role == "patient" else [])
     )
+    patients_list = []
+    for p in pids:
+        pu = db.get(User, p)
+        if pu:
+            patients_list.append({"id": p, "name": pu.name})
     return {
         "id": user.id,
         "name": user.name,
         "email": user.email,
         "role": user.role,
-        "patients": [{"id": p, "name": db.get(User, p).name} for p in pids],
+        "patients": patients_list,
         "demo_mode": DEMO_MODE,
     }
 
@@ -90,12 +95,15 @@ def me(u=Depends(current_user), db: Session = Depends(get_db)):
 @router.get("/patients/{pid}/snapshot")
 def snapshot(pid: int, u=Depends(current_user), db: Session = Depends(get_db)):
     authorize(db, u, pid)
+    patient_user = db.get(User, pid)
+    if not patient_user:
+        raise HTTPException(404, "Patient not found.")
     process_due(db)
     rt = routines(db, pid)
     md = medications(db, pid)
     pr = progress(db, pid)
     result = {
-        "patient": {"id": pid, "name": db.get(User, pid).name},
+        "patient": {"id": pid, "name": patient_user.name},
         "date": today(),
         "routines": rt,
         "medications": md,
@@ -122,17 +130,27 @@ def snapshot(pid: int, u=Depends(current_user), db: Session = Depends(get_db)):
 
 @router.get("/settings")
 def settings(u=Depends(current_user), db: Session = Depends(get_db)):
-    return serialize(db.query(UserSettings).filter_by(user_id=u.id).one())
+    item = db.query(UserSettings).filter_by(user_id=u.id).first()
+    if not item:
+        item = UserSettings(user_id=u.id)
+        db.add(item)
+        db.commit()
+        db.refresh(item)
+    return serialize(item)
 
 
 @router.put("/settings")
 def update_settings(
     body: SettingsInput, u=Depends(current_user), db: Session = Depends(get_db)
 ):
-    item = db.query(UserSettings).filter_by(user_id=u.id).one()
+    item = db.query(UserSettings).filter_by(user_id=u.id).first()
+    if not item:
+        item = UserSettings(user_id=u.id)
+        db.add(item)
     for k, v in body.model_dump().items():
         setattr(item, k, v)
     db.commit()
+    db.refresh(item)
     return serialize(item)
 
 

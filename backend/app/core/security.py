@@ -37,6 +37,8 @@ def token(user):
 
 
 def current_user(credentials=Depends(bearer), db: Session = Depends(get_db)):
+    if not credentials or not credentials.credentials:
+        raise HTTPException(401, "Please sign in again.")
     try:
         data = jwt.decode(credentials.credentials, JWT_SECRET, algorithms=["HS256"])
         user = db.get(User, int(data["sub"]))
